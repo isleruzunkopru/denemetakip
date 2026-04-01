@@ -3625,7 +3625,7 @@ async function importBackup(e) {
   reader.readAsText(file);
 }
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtU6hD7DfuxhTRBp946E1Uy__LqNdnPOk6HbzJulCKf3tnXky_-Gq0DtImS4YTYEy4/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbweOcUOrks-e1Us_kNcdvwXfO_j7hOVXlSC1NFbbuET3Q33ZwJxJabpK5CVuvs2GmA/exec';
 
 async function driveBackup() {
   try {
@@ -3655,8 +3655,35 @@ async function driveBackup() {
 async function driveRestore() {
   try {
     toast('☁️ Drive\'dan yükleniyor...', 'default', 3000);
-    const res = await fetch(APPS_SCRIPT_URL + '?action=get', { mode: 'no-cors' });
-    toast('⚠️ CORS kısıtı nedeniyle Drive\'dan geri yükleme tarayıcıda desteklenmiyor. JSON yedek kullanın.', 'error', 5000);
+    const data = await new Promise((resolve, reject) => {
+      const cbName = 'driveRestoreCb_' + Date.now();
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => {
+        delete window[cbName];
+        script.remove();
+        reject(new Error('Zaman aşımı'));
+      }, 10000);
+      window[cbName] = (data) => {
+        clearTimeout(timeout);
+        delete window[cbName];
+        script.remove();
+        resolve(data);
+      };
+      script.src = APPS_SCRIPT_URL + '?callback=' + cbName;
+      script.onerror = () => { clearTimeout(timeout); reject(new Error('Script yüklenemedi')); };
+      document.head.appendChild(script);
+    });
+    if (!data || !data.exams) { toast('Drive\'da geçerli yedek bulunamadı', 'error'); return; }
+    if (data.exams) state.exams = data.exams;
+    if (data.schools) state.schools = data.schools;
+    if (data.categories && data.categories.length) state.categories = data.categories;
+    if (data.payments) state.payments = data.payments;
+    if (data.publishers) state.publishers = data.publishers;
+    if (data.periods) state.periods = data.periods;
+    if (data.catalogItems) state.catalogItems = data.catalogItems;
+    await saveAll();
+    renderAll();
+    toast('✅ Drive\'dan geri yüklendi!', 'success');
   } catch (err) {
     toast('❌ ' + err.message, 'error');
   }
