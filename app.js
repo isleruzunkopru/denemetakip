@@ -1999,6 +1999,35 @@ function renderSettings() {
   renderPublisherList();
   renderHistory();
 
+  // Add toggle button to publisher section if not already there
+  const pubList = document.getElementById('publisherList');
+  if (pubList) {
+    const section = pubList.closest('.settings-section');
+    if (section && !section.querySelector('#btnTogglePublishers')) {
+      const title = section.querySelector('.section-title');
+      if (title) {
+        title.style.display = 'flex';
+        title.style.alignItems = 'center';
+        title.style.justifyContent = 'space-between';
+        const btn = document.createElement('button');
+        btn.id = 'btnTogglePublishers';
+        btn.className = 'btn-xs btn-secondary';
+        btn.textContent = '▲ Gizle';
+        btn.style.fontSize = '11px';
+        btn.addEventListener('click', () => {
+          const isOpen = pubList.style.display !== 'none';
+          pubList.style.display = isOpen ? 'none' : '';
+          const addRow = document.getElementById('addPublisherRow');
+          const addBtn = document.getElementById('btnAddPublisher');
+          if (addRow) addRow.style.display = isOpen ? 'none' : (addRow._wasVisible ? 'flex' : 'none');
+          if (addBtn) addBtn.style.display = isOpen ? 'none' : '';
+          btn.textContent = isOpen ? '▼ Göster' : '▲ Gizle';
+        });
+        title.appendChild(btn);
+      }
+    }
+  }
+
   const nd = document.getElementById('notifyDays');
   const nsd = document.getElementById('notifyStockDays');
   const ab = document.getElementById('autoBackup');
