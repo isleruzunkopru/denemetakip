@@ -3625,56 +3625,59 @@ async function importBackup(e) {
   reader.readAsText(file);
 }
 
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7qlbQQh-uUr6WwY7Jz8YaCVheNsc2CDJEpLgJLtF6TtBB7QsrU-65LJIFvz8zg2Fm/exec';
+
 async function driveBackup() {
   try {
-    toast('☁️ Google\'a bağlanıyor...', 'default', 3000);
-    const token = await getGoogleToken();
-
+    toast('☁️ Drive\'a yükleniyor...', 'default', 3000);
     const data = {
       version: 3, exportedAt: new Date().toISOString(),
       exams: state.exams, schools: state.schools, categories: state.categories,
       payments: state.payments, publishers: state.publishers, periods: state.periods,
       settings: state.settings, catalogItems: state.catalogItems,
     };
-    const fileName = `deneme-takip-${new Date().toISOString().slice(0,10)}.json`;
-    const fileContent = JSON.stringify(data, null, 2);
-
-    // Check if backup file already exists
-    const searchRes = await fetch(
-      `https://www.googleapis.com/drive/v3/files?q=name='deneme-takip-backup.json' and trashed=false&fields=files(id)`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const searchData = await searchRes.json();
-    const existingId = searchData.files?.[0]?.id;
-
-    const metadata = { name: 'deneme-takip-backup.json', mimeType: 'application/json' };
-    const form = new FormData();
-    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    form.append('file', new Blob([fileContent], { type: 'application/json' }));
-
-    const uploadUrl = existingId
-      ? `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`
-      : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
-
-    const uploadRes = await fetch(uploadUrl, {
-      method: existingId ? 'PATCH' : 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: form,
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
-
-    if (uploadRes.ok) {
+    const text = await res.text();
+    if (text.startsWith('OK') || res.ok) {
       state.settings.lastBackup = Date.now();
       await saveData('settings');
       renderSettings();
       toast('☁️ Drive\'a yedeklendi!', 'success');
     } else {
-      const err = await uploadRes.json();
-      toast('❌ Drive hatası: ' + (err.error?.message || 'Bilinmeyen'), 'error');
+      toast('❌ Drive hatası: ' + text, 'error');
     }
   } catch (err) {
     toast('❌ ' + err.message, 'error');
   }
 }
+
+async function driveRestore() {
+  try {
+    toast('☁️ Drive\'dan yükleniyor...', 'default', 3000);
+    const res = await fetch(APPS_SCRIPT_URL);
+    const text = await res.text();
+    if (!text || text === '{}') {
+      toast('Drive\'da yedek bulunamadı', 'error'); return;
+    }
+    const data = JSON.parse(text);
+    if (data.exams) state.exams = data.exams;
+    if (data.schools) state.schools = data.schools;
+    if (data.categories) state.categories = data.categories;
+    if (data.payments) state.payments = data.payments;
+    if (data.publishers) state.publishers = data.publishers;
+    if (data.periods) state.periods = data.periods;
+    if (data.catalogItems) state.catalogItems = data.catalogItems;
+    await saveAll();
+    renderAll();
+    toast('✅ Drive\'dan geri yüklendi!', 'success');
+  } catch (err) {
+    toast('❌ ' + err.message, 'error');
+  }
+}
+
 
 // ===== MODAL HELPERS =====
 function openModal(html) {
