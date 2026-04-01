@@ -3663,7 +3663,7 @@ async function driveRestore() {
         delete window[cbName];
         script.remove();
         reject(new Error('Zaman aşımı'));
-      }, 10000);
+      }, 20000);
       window[cbName] = (data) => {
         clearTimeout(timeout);
         delete window[cbName];
