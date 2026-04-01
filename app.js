@@ -539,16 +539,16 @@ function setupTabMode() {
 
 // ===== REAL-TIME SYNC =====
 function setupStorageSync() {
-  window.addEventListener('storage', (event) => { const changes = {}; if(event.key) changes[event.key] = {newValue: event.newValue ? JSON.parse(event.newValue) : null}; const area = 'local'; return ((changes, area) => {
-    if (area !== 'local') return;
+  window.addEventListener('storage', (event) => {
+    if (!event.key) return;
+    const keys = ['exams','schools','categories','payments','publishers','periods','settings'];
+    if (!keys.includes(event.key)) return;
     const modalOpen = !document.getElementById('modalOverlay').classList.contains('hidden');
     if (modalOpen) return;
-    let updated = false;
-    const keys = ['exams','schools','categories','payments','publishers','periods','settings'];
-    keys.forEach(k => {
-      if (changes[k]) { state[k] = changes[k].newValue || (Array.isArray(state[k]) ? [] : {}); updated = true; }
-    });
-    if (updated) { renderAll(); checkAlerts(); showSyncToast(); }
+    try {
+      if (event.newValue) state[event.key] = JSON.parse(event.newValue);
+    } catch(e) {}
+    renderAll(); checkAlerts();
   });
 }
 
@@ -3288,12 +3288,7 @@ function openMultiExamModal() {
 
 // ===== GOOGLE CALENDAR =====
 async function getGoogleToken() {
-  return new Promise((resolve, reject) => {
-    // Google auth not available in PWA
-      reject(new Error('Google auth not available in PWA')); if(false) ((token) => {
-      else resolve(token);
-    });
-  });
+  return Promise.reject(new Error('Google auth not available in PWA'));
 }
 
 async function addToGoogleCalendar(exam) {
