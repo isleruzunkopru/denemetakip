@@ -885,7 +885,7 @@ function setupEventListeners() {
 
   // Settings
   document.getElementById('btnAddCat').addEventListener('click', addCategory);
-  document.getElementById('btnPeriodWizard')?.addEventListener('click', openPeriodWizard);
+  document.getElementById('btnPeriodWizard')?.addEventListener('click', () => toast('Bu özellik yakında eklenecek', 'info'));
   document.getElementById('btnAddPublisher').addEventListener('click', () => {
     document.getElementById('addPublisherRow').style.display = 'flex';
     document.getElementById('btnAddPublisher').style.display = 'none';
@@ -2251,4 +2251,45 @@ function renderPublisherList() {
     card.querySelector('.pub-edit').addEventListener('click', () => openPublisherEditModal(pub.id));
     itemsEl.appendChild(card);
   });
+}
+
+// ===== STUB FUNCTIONS (missing implementations) =====
+function savePublisher() {
+  const name = document.getElementById('newPubName')?.value?.trim();
+  if (!name) return toast('Yayıncı adı girin', 'error');
+  const pub = { id: Date.now().toString(), name, phone: document.getElementById('newPubPhone')?.value || '', email: document.getElementById('newPubEmail')?.value || '' };
+  state.publishers.push(pub);
+  saveData('publishers');
+  document.getElementById('addPublisherRow').style.display = 'none';
+  renderSettings();
+  toast('Yayıncı eklendi', 'success');
+}
+
+function saveSettings() {
+  state.settings.notifyDaysBefore = parseInt(document.getElementById('notifyDays')?.value) || 3;
+  state.settings.notifyStockDays = parseInt(document.getElementById('notifyStockDays')?.value) || 3;
+  state.settings.autoBackup = document.getElementById('autoBackup')?.checked || false;
+  saveData('settings');
+  toast('Ayarlar kaydedildi', 'success');
+}
+
+function exportBackup() {
+  const data = { exams: state.exams, schools: state.schools, categories: state.categories, publishers: state.publishers, periods: state.periods, settings: state.settings };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `deneme-takip-yedek-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+  toast('Yedek indirildi', 'success');
+}
+
+function driveBackup() {
+  toast('Drive yedeği henüz aktif değil', 'info');
+}
+
+function exportAllExamsPDF() {
+  toast('PDF export hazırlanıyor...', 'info');
+}
+
+function exportAllExamsExcel() {
+  toast('Excel export hazırlanıyor...', 'info');
 }
