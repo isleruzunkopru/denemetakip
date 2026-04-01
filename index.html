@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DenemeTakip">
+  <meta name="theme-color" content="#6c3fff">
+  <title>DenemeTakip</title>
+  <link rel="stylesheet" href="app.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon128.png">
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <span class="logo-icon">📚</span>
+      <span class="logo-text">Deneme<b>Takip</b></span>
+    </div>
+    <div class="header-right">
+      <div id="alertBell" class="alert-bell hidden" title="Uyarılar">
+        <span>🔔</span><span class="alert-count" id="alertCount">0</span>
+      </div>
+      <button class="btn-icon" id="btnUndoGlobal" title="Geri Al (Ctrl+Z)" style="display:none">↩️</button>
+      <button class="btn-icon" id="btnOpenTab" title="Ayrı sekmede aç">⛶</button>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <nav class="tabs" id="mainTabs">
+    <button class="tab active" data-tab="calendar">📅 Takvim</button>
+    <button class="tab" data-tab="list">📋 Liste</button>
+    <button class="tab" data-tab="schools">🏫 Okullar</button>
+    <button class="tab" data-tab="reports">📊 Rapor</button>
+    <button class="tab" data-tab="settings">⚙️ Ayarlar</button>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content" id="mainContent">
+
+    <!-- ===== CALENDAR TAB ===== -->
+    <div id="tab-calendar" class="tab-content active">
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button class="btn-nav" id="prevPeriod">‹</button>
+          <span id="calendarTitle" class="cal-title"></span>
+          <button class="btn-nav" id="nextPeriod">›</button>
+        </div>
+        <div class="cal-view-toggle">
+          <button class="cal-view-btn active" data-view="month">Ay</button>
+          <button class="cal-view-btn" data-view="year">Yıl</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+        <div class="calendar-legend" id="calendarLegend" style="margin-bottom:0;flex:1">
+          <span class="legend-item"><span class="dot dot-stock"></span>Stok</span>
+          <span class="legend-item"><span class="dot dot-app"></span>Uygulama</span>
+        </div>
+        <select id="calFilterSchool" class="filter-select" style="font-size:10px;max-width:160px">
+          <option value="">Tüm Okullar</option>
+        </select>
+      </div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+      <div id="yearGrid" class="year-grid hidden"></div>
+      <div id="dayDetail" class="day-detail hidden"></div>
+    </div>
+
+    <!-- ===== LIST TAB ===== -->
+    <div id="tab-list" class="tab-content">
+
+      <!-- View Toggle: Liste / Katalog -->
+      <div class="view-mode-toggle">
+        <button class="view-mode-btn active" id="btnViewList" data-view="list">📋 Liste</button>
+        <button class="view-mode-btn" id="btnViewCatalog" data-view="catalog">📚 Deneme Kataloğu</button>
+      </div>
+
+      <!-- LIST VIEW -->
+      <div id="listViewSection">
+        <div class="list-toolbar">
+          <button class="btn-primary" id="btnAddExam">+ Deneme Ekle</button>
+          <label class="btn-import" title="Excel/CSV İçe Aktar">
+            📥 İçe Aktar
+            <input type="file" id="btnImportExcel" accept=".csv,.xlsx,.xls,.txt,.tsv" style="display:none">
+          </label>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Ara: deneme, okul, tarih..." class="search-input">
+            <button class="search-clear hidden" id="searchClear">×</button>
+          </div>
+        </div>
+        <div class="list-filters">
+          <select id="filterCat" class="filter-select">
+            <option value="">Tüm Kategoriler</option>
+          </select>
+          <select id="filterPub" class="filter-select">
+            <option value="">Tüm Yayınevleri</option>
+          </select>
+          <select id="filterType" class="filter-select">
+            <option value="">Tüm Türler</option>
+            <option value="Tarama">Tarama</option>
+            <option value="Genel">Genel</option>
+            <option value="TG">TG</option>
+          </select>
+          <select id="filterPeriod" class="filter-select">
+            <option value="">Tüm Dönemler</option>
+          </select>
+          <select id="filterSort" class="filter-select">
+            <option value="appDate">Uygulama ↑</option>
+            <option value="appDateDesc">Uygulama ↓</option>
+            <option value="stockDate">Stok ↑</option>
+            <option value="stockDateDesc">Stok ↓</option>
+            <option value="name">İsim A-Z</option>
+          </select>
+        </div>
+        <div class="list-subtabs">
+          <button class="list-subtab active" data-subtab="pending">📋 Bekleyen</button>
+          <button class="list-subtab" data-subtab="applied">✅ Uygulandı</button>
+          <button class="list-subtab" data-subtab="all">Tümü</button>
+        </div>
+        <div class="bulk-toolbar hidden" id="bulkToolbar">
+          <span id="bulkCount">0 seçili</span>
+          <div class="bulk-status-btns" id="bulkStatusBtns"></div>
+          <button class="btn-xs btn-delete" id="btnBulkDelete">🗑️ Sil</button>
+          <button class="btn-xs btn-secondary" id="btnBulkCancel">İptal</button>
+        </div>
+        <div id="examList" class="exam-list"></div>
+      </div><!-- /listViewSection -->
+
+      <!-- CATALOG VIEW -->
+      <div id="catalogViewSection" class="hidden">
+        <div class="catalog-view-toggle">
+          <button class="cat-view-btn active" id="btnCatalogByExam" data-cview="exams">📋 Denemeler</button>
+          <button class="cat-view-btn" id="btnCatalogByPub" data-cview="publishers">🏢 Yayınevleri</button>
+        </div>
+        <div class="catalog-toolbar">
+          <div class="search-box" style="flex:1;max-width:100%">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="catalogSearch" placeholder="Deneme veya yayıncı ara..." class="search-input">
+            <button class="search-clear hidden" id="catalogSearchClear">×</button>
+          </div>
+          <select id="catalogFilterCat" class="filter-select">
+            <option value="">Tüm Kategoriler</option>
+          </select>
+        </div>
+        <div id="catalogList" class="catalog-list"></div>
+        <div id="publisherGrid" class="publisher-grid hidden"></div>
+      </div><!-- /catalogViewSection -->
+
+    </div><!-- /tab-list -->
+
+    <!-- ===== SCHOOLS TAB ===== -->
+    <div id="tab-schools" class="tab-content">
+      <div class="list-toolbar" id="schoolsToolbar">
+        <button class="btn-primary" id="btnAddSchool">+ Okul Ekle</button>
+        <button class="btn-import" id="btnImportSchools">📥 Toplu Ekle</button>
+        <div class="school-summary-bar">
+          <span id="schoolSummary"></span>
+          <button class="btn-xs btn-edit" id="btnCompareSchools" title="Okulları Karşılaştır">📊 Karşılaştır</button>
+        </div>
+      </div>
+      <div id="schoolList" class="school-list"></div>
+      <div id="schoolDetail" class="school-detail hidden"></div>
+      <div id="schoolCompare" class="school-compare hidden"></div>
+    </div>
+
+    <!-- ===== REPORTS TAB ===== -->
+    <div id="tab-reports" class="tab-content">
+      <div class="report-tabs">
+        <button class="report-tab active" data-rtab="summary">📈 Özet</button>
+        <button class="report-tab" data-rtab="monthly">📅 Aylık</button>
+        <button class="report-tab" data-rtab="yearly">📆 Yıllık</button>
+        <button class="report-tab" data-rtab="schools">🏫 Okullar</button>
+        <button class="report-tab" data-rtab="period">🗓️ Dönem</button>
+        <button class="report-tab" data-rtab="export">⬇️ Export</button>
+      </div>
+      <div id="reportContent"></div>
+    </div>
+
+    <!-- ===== SETTINGS TAB ===== -->
+    <div id="tab-settings" class="tab-content">
+
+      <div class="settings-section">
+        <h3 class="section-title">🗓️ Dönem Yönetimi</h3>
+        <div id="periodList" class="period-list"></div>
+        <div class="add-period-row">
+          <input type="text" id="newPeriodName" placeholder="Dönem adı (2024-2025 1.Dönem)" class="input-sm" style="flex:2">
+          <input type="date" id="newPeriodStart" class="input-sm">
+          <input type="date" id="newPeriodEnd" class="input-sm">
+          <button class="btn-sm btn-success" id="btnAddPeriod">Ekle</button>
+        </div>
+        <button class="btn-primary" id="btnPeriodWizard" style="margin-top:10px;width:100%">🧙 Dönem Başı Planlama Sihirbazı</button>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-title">🗂️ Kategoriler</h3>
+        <div id="categoryList" class="tag-list"></div>
+        <div class="add-tag-row">
+          <input type="text" id="newCatName" placeholder="Yeni kategori..." class="input-sm">
+          <input type="color" id="newCatColor" value="#6366f1" class="input-color">
+          <button class="btn-sm btn-success" id="btnAddCat">Ekle</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-title">📚 Yayıncılar</h3>
+        <div id="publisherList"></div>
+        <div class="add-publisher-row" id="addPublisherRow" style="display:none">
+          <input type="text" id="newPubName" placeholder="Yayıncı adı" class="input-sm">
+          <input type="tel" id="newPubPhone" placeholder="Telefon" class="input-sm">
+          <input type="email" id="newPubEmail" placeholder="E-posta" class="input-sm">
+          <button class="btn-sm btn-success" id="btnSavePublisher">Kaydet</button>
+          <button class="btn-sm btn-secondary" id="btnCancelPublisher">İptal</button>
+        </div>
+        <button class="btn-secondary" id="btnAddPublisher" style="margin-top:8px;font-size:11px">+ Yayıncı Ekle</button>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-title">🔔 Bildirim Ayarları</h3>
+        <div class="setting-row">
+          <label>Stok tarihinden kaç gün önce uyar?</label>
+          <input type="number" id="notifyStockDays" min="1" max="14" value="3" class="input-sm" style="width:60px">
+        </div>
+        <div class="setting-row">
+          <label>Uygulama tarihinden kaç gün önce uyar?</label>
+          <input type="number" id="notifyDays" min="1" max="14" value="3" class="input-sm" style="width:60px">
+        </div>
+        <button class="btn-primary" id="btnSaveSettings">Ayarları Kaydet</button>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-title">☁️ Yedek & Senkronizasyon</h3>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Google Drive'a otomatik yedek alınır veya elle alabilirsiniz.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <button class="btn-primary" id="btnExportBackup">⬇️ Yedek Al (JSON)</button>
+          <button class="btn-primary" id="btnDriveBackup">☁️ Drive'a Yedekle</button>
+          <label class="btn-secondary" style="cursor:pointer;padding:8px 14px;font-size:12px;font-weight:700;border-radius:8px;border:1.5px solid var(--border)">
+            ⬆️ Geri Yükle
+            <input type="file" id="btnImportBackup" accept=".json" style="display:none">
+          </label>
+        </div>
+        <div class="setting-row">
+          <label>Otomatik Drive yedeği (saatte bir)</label>
+          <input type="checkbox" id="autoBackup" style="accent-color:var(--primary)">
+        </div>
+        <div id="lastBackupInfo" style="font-size:10px;color:var(--text-muted);margin-top:6px"></div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-title">📜 Son İşlemler</h3>
+        <div id="historyList" class="history-list"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div id="modalOverlay" class="modal-overlay hidden">
+  <div id="modalBox" class="modal-box"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="xlsx-parser.js"></script>
+<script src="app.js"></script>
+<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
+</body>
+</html>

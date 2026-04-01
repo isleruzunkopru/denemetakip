@@ -1,0 +1,16 @@
+{
+  "name": "DenemeTakip",
+  "short_name": "DenemeTakip",
+  "description": "Deneme takip sistemi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#6c3fff",
+  "theme_color": "#6c3fff",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/icon48.png",  "sizes": "48x48",   "type": "image/png" },
+    { "src": "icons/icon128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "icons/icon128.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon128.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
