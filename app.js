@@ -2037,7 +2037,12 @@ function renderSettings() {
 
   const lastBackup = state.settings.lastBackup;
   const lbi = document.getElementById('lastBackupInfo');
-  if (lbi) lbi.textContent = lastBackup ? `Son yedek: ${new Date(lastBackup).toLocaleString('tr-TR')}` : 'Henüz yedek alınmadı.';
+  if (lbi) {
+    const email = localStorage.getItem('gDriveEmail');
+    const lastBackupText = lastBackup ? `Son yedek: ${new Date(lastBackup).toLocaleString('tr-TR')}` : 'Henüz yedek alınmadı.';
+    const emailText = email ? `☑️ Bağlı hesap: ${email}` : '⚪ Drive hesabı bağlı değil';
+    lbi.innerHTML = `<div>${emailText} ${email ? `<button onclick="localStorage.removeItem('gDriveEmail');renderSettings();" style="font-size:10px;color:red;background:none;border:none;cursor:pointer">Çıkış</button>` : ''}</div><div>${lastBackupText}</div>`;
+  }
 }
 
 function renderPeriods() {
@@ -3325,22 +3330,45 @@ function openMultiExamModal() {
 // ===== GOOGLE CALENDAR =====
 const GOOGLE_CLIENT_ID = '141402909264-btv7soki4jd47dlto7bm10pmne6u8rhv.apps.googleusercontent.com';
 const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+let _googleToken = null;
+let _googleTokenExpiry = 0;
 
 function getGoogleToken() {
   return new Promise((resolve, reject) => {
+    // Return cached token if still valid
+    if (_googleToken && Date.now() < _googleTokenExpiry) {
+      resolve(_googleToken);
+      return;
+    }
     if (!window.google?.accounts?.oauth2) {
       reject(new Error('Google Identity Services yüklenmedi'));
       return;
     }
+    const savedEmail = localStorage.getItem('gDriveEmail') || '';
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: GOOGLE_SCOPE,
+      hint: savedEmail,
       callback: (response) => {
-        if (response.error) reject(new Error(response.error));
-        else resolve(response.access_token);
+        if (response.error) {
+          reject(new Error(response.error));
+        } else {
+          _googleToken = response.access_token;
+          _googleTokenExpiry = Date.now() + (response.expires_in - 60) * 1000;
+          // Save email for future silent logins
+          if (response.access_token) {
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${response.access_token}` }
+            }).then(r => r.json()).then(info => {
+              if (info.email) localStorage.setItem('gDriveEmail', info.email);
+            }).catch(() => {});
+          }
+          resolve(_googleToken);
+        }
       },
     });
-    client.requestAccessToken({ prompt: 'consent' });
+    // Silent if we have a saved email, otherwise show picker
+    client.requestAccessToken({ prompt: savedEmail ? '' : 'select_account' });
   });
 }
 
