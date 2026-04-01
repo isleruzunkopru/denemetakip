@@ -3323,8 +3323,25 @@ function openMultiExamModal() {
 
 
 // ===== GOOGLE CALENDAR =====
-async function getGoogleToken() {
-  return Promise.reject(new Error('Google auth not available in PWA'));
+const GOOGLE_CLIENT_ID = '141402909264-btv7soki4jd47dlto7bm10pmne6u8rhv.apps.googleusercontent.com';
+const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+function getGoogleToken() {
+  return new Promise((resolve, reject) => {
+    if (!window.google?.accounts?.oauth2) {
+      reject(new Error('Google Identity Services yüklenmedi'));
+      return;
+    }
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: GOOGLE_SCOPE,
+      callback: (response) => {
+        if (response.error) reject(new Error(response.error));
+        else resolve(response.access_token);
+      },
+    });
+    client.requestAccessToken({ prompt: 'consent' });
+  });
 }
 
 async function addToGoogleCalendar(exam) {
@@ -3582,27 +3599,52 @@ async function importBackup(e) {
 
 async function driveBackup() {
   try {
-    toast('☁️ Drive\'a yükleniyor...', 'default', 2000);
+    toast('☁️ Google\'a bağlanıyor...', 'default', 3000);
     const token = await getGoogleToken();
+
     const data = {
       version: 3, exportedAt: new Date().toISOString(),
       exams: state.exams, schools: state.schools, categories: state.categories,
       payments: state.payments, publishers: state.publishers, periods: state.periods,
       settings: state.settings, catalogItems: state.catalogItems,
     };
-    const result = await new Promise(resolve => {
-      resolve({ success: false, error: 'Drive backup not available in PWA' });
+    const fileName = `deneme-takip-${new Date().toISOString().slice(0,10)}.json`;
+    const fileContent = JSON.stringify(data, null, 2);
+
+    // Check if backup file already exists
+    const searchRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='deneme-takip-backup.json' and trashed=false&fields=files(id)`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const searchData = await searchRes.json();
+    const existingId = searchData.files?.[0]?.id;
+
+    const metadata = { name: 'deneme-takip-backup.json', mimeType: 'application/json' };
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', new Blob([fileContent], { type: 'application/json' }));
+
+    const uploadUrl = existingId
+      ? `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`
+      : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: existingId ? 'PATCH' : 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
     });
-    if (result?.ok) {
+
+    if (uploadRes.ok) {
       state.settings.lastBackup = Date.now();
       await saveData('settings');
       renderSettings();
       toast('☁️ Drive\'a yedeklendi!', 'success');
     } else {
-      toast('❌ Drive yedek hatası: ' + (result?.error||'Bilinmeyen hata'), 'error');
+      const err = await uploadRes.json();
+      toast('❌ Drive hatası: ' + (err.error?.message || 'Bilinmeyen'), 'error');
     }
   } catch (err) {
-    toast('❌ Drive yedek hatası: ' + err.message, 'error');
+    toast('❌ ' + err.message, 'error');
   }
 }
 
