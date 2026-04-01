@@ -796,6 +796,7 @@ function setupEventListeners() {
   document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
   document.getElementById('btnExportBackup').addEventListener('click', exportBackup);
   document.getElementById('btnDriveBackup').addEventListener('click', driveBackup);
+  document.getElementById('btnDriveRestore')?.addEventListener('click', driveRestore);
   document.getElementById('btnImportBackup').addEventListener('change', importBackup);
 
   // Undo button
@@ -3646,7 +3647,7 @@ async function driveBackup() {
     state.settings.lastBackup = Date.now();
     await saveData('settings');
     renderSettings();
-    toast('☁️ Drive\'a yedeklendi!', 'success');
+    toast('☁️ Drive\'a yedeklendi! ✅', 'success');
   } catch (err) {
     toast('❌ ' + err.message, 'error');
   }
