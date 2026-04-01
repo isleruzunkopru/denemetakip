@@ -594,6 +594,9 @@ async function undoLast() {
 document.addEventListener('DOMContentLoaded', async () => {
   // Handle Google OAuth redirect callback
   handleOAuthCallback();
+  
+  // Ensure app is visible immediately
+  document.body.style.opacity = '1';
   await loadData();
   setupTabs();
   setupEventListeners();
@@ -618,7 +621,10 @@ function renderAll() {
 
 // ===== TAB MODE =====
 function setupTabMode() {
-  const isTab = window.outerWidth > 600;
+  // In standalone PWA mode, never use tab mode
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+    || window.navigator.standalone === true;
+  const isTab = !isStandalone && window.outerWidth > 600;
   if (isTab) document.body.classList.add('tab-mode');
 
   const btn = document.getElementById('btnOpenTab');
