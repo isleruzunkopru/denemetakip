@@ -1,18 +1,6 @@
 /* ===== RESET & VARIABLES ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 14px;
-  -webkit-overflow-scrolling: touch;
-  max-width: 100vw;
-  width: 100%;
-  display: block;
-}
-
 :root {
   --primary: #6c3fff;
   --primary-light: #ede9ff;
@@ -43,8 +31,8 @@
 
 /* ===== BASE ===== */
 body {
-  width: 100%;
-  min-height: 100dvh;
+  width: 520px;
+  height: 600px;
   display: flex;
   flex-direction: column;
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -52,19 +40,14 @@ body {
   color: var(--text);
   font-size: 13px;
   line-height: 1.5;
-  overflow-x: hidden;
-  margin: 0;
-  padding: 0;
+  overflow: hidden;
 }
 
 #app {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  height: 100svh; /* iOS fallback */
-  width: 100%;
+  height: 100%;
   overflow: hidden;
-  max-width: 100vw;
 }
 
 /* ===== HEADER ===== */
@@ -109,18 +92,14 @@ body {
   display: flex; align-items: center; justify-content: center;
 }
 
-/* ===== TABS (bottom nav) ===== */
+/* ===== TABS ===== */
 .tabs {
   display: flex;
-  flex-shrink: 0;
   background: var(--surface);
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+  border-bottom: 2px solid var(--border);
   overflow-x: auto;
   scrollbar-width: none;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  z-index: 10;
-  order: 3;
+  flex-shrink: 0;
 }
 .tabs::-webkit-scrollbar { display: none; }
 
@@ -130,14 +109,18 @@ body {
   background: none; border: none;
   cursor: pointer; font-size: 11px;
   color: var(--text-muted); font-weight: 500;
-  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
   transition: all 0.2s; white-space: nowrap;
 }
 .tab:hover { color: var(--primary); background: var(--primary-light); }
-.tab.active { color: var(--primary); border-top-color: var(--primary); font-weight: 700; }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
 
 /* ===== CONTENT ===== */
-
+.content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 12px 14px;
+}
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
@@ -633,7 +616,7 @@ body {
 /* ===== TAB MODE ===== */
 body.tab-mode { width: 100vw; height: 100vh; max-width: 1000px; margin: 0 auto; }
 body.tab-mode #app { height: 100vh; box-shadow: 0 0 40px rgba(108,63,255,0.15); }
-body.tab-mode 
+body.tab-mode .content { padding: 20px 24px; }
 body.tab-mode .modal-box { width: 560px; }
 
 @media (min-width: 800px) {
@@ -1057,11 +1040,7 @@ body.tab-mode .modal-box { width: 560px; }
 }
 .bulk-add-school-row:hover { border-color: var(--primary); }
 
-/* ═══════════════════════════════════════
-   PWA / MOBİL UYUMLU STILLER
-═══════════════════════════════════════ */
-
-/* Safe area for iPhone notch / home indicator */
+/* ===== PWA MOBİL STİLLER ===== */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -1070,159 +1049,52 @@ body.tab-mode .modal-box { width: 560px; }
 body {
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+  margin: 0; padding: 0;
 }
 
-/* Header safe area */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100svh;
+  overflow: hidden;
+  max-width: 100vw;
+}
+
 .header {
+  flex-shrink: 0;
   padding-top: calc(10px + var(--safe-top));
 }
 
-/* Bottom navigation safe area */
 .tabs {
+  flex-shrink: 0;
+  order: 3;
+  border-bottom: none;
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
   padding-bottom: var(--safe-bottom);
+  position: static !important;
 }
 
-/* Full height on mobile */
-#app {
-  min-height: 100dvh;
-  min-height: 100svh;
+.tab {
+  border-bottom: none !important;
+  border-top: 2px solid transparent;
+  margin-bottom: 0 !important;
+}
+.tab.active {
+  border-top-color: var(--primary) !important;
+  border-bottom-color: transparent !important;
 }
 
-/* Make modals full-screen on small phones */
-@media (max-width: 480px) {
-  .modal-box {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: 95dvh !important;
-    border-radius: 18px 18px 0 0 !important;
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: auto !important;
-    transform: none !important;
-    margin: 0 !important;
-  }
-  .modal-overlay {
-    align-items: flex-end !important;
-  }
-  
-  /* Bigger touch targets */
-  .btn-xs { padding: 8px 10px !important; font-size: 12px !important; }
-  .status-step { padding: 8px 6px !important; }
-  .tab { padding: 10px 4px !important; font-size: 10px !important; }
-}
-
-/* Prevent zoom on input focus (iOS) */
-input, select, textarea {
-  font-size: max(16px, 1em) !important;
-}
-
-/* iOS scroll fix */
-.content, .exam-list, .catalog-list, .school-list {
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* PWA install banner */
-.pwa-install-banner {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--primary); color: white;
-  padding: 10px 14px; font-size: 12px; font-weight: 700;
-  cursor: pointer;
-}
-.pwa-install-banner button {
-  background: white; color: var(--primary);
-  border: none; border-radius: 8px;
-  padding: 6px 12px; font-weight: 800; font-size: 11px;
-  cursor: pointer; margin-left: auto; white-space: nowrap;
-}
-
-
-/* ════════════════════════════════════════
-   MOBİL TAM DÜZELTME
-════════════════════════════════════════ */
-
-/* Temel: hiçbir şey ekrandan taşmasın */
-*, *::before, *::after { box-sizing: border-box; }
-html { overflow-x: hidden; }
-body { overflow-x: hidden; max-width: 100vw; }
-#app { overflow-x: hidden; max-width: 100vw; }
-
-
-/* Tüm satırlar ve araç çubukları kırılsın */
-.list-toolbar,
-.list-filters,
-.cal-toolbar,
-.catalog-toolbar,
-.catalog-view-toggle,
-.view-mode-toggle,
-.report-tabs,
-.school-detail-header,
-.debt-summary,
-.export-row,
-.bulk-toolbar {
-  flex-wrap: wrap;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-/* Tablolar kaydırılabilsin */
-.schedule-table,
-.month-table,
-table {
-  display: block;
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-/* Kartlar tam genişlik */
-.exam-card,
-.school-card,
-.catalog-card,
-.stat-card {
-  max-width: 100%;
-  overflow: hidden;
-}
-
-/* Exam list grid: tek kolon mobilde */
-.exam-list {
-  grid-template-columns: 1fr !important;
-}
-
 @media (max-width: 600px) {
-
-  /* Filter seçicileri küçült */
-  .filter-select {
-    font-size: 11px;
-    padding: 5px 6px;
-    max-width: 130px;
-  }
-
-  /* Takvim */
-  #calFilterSchool { max-width: 100px; font-size: 10px; }
-  .calendar-legend { flex-wrap: wrap; gap: 3px; font-size: 10px; }
-  .legend-item { font-size: 10px; }
-  #calendarGrid { font-size: 11px; }
-  .cal-day { min-height: 36px; padding: 2px; }
-  .cal-header { font-size: 10px; }
-
-  /* Rapor sekmeleri kaydır */
-  .report-tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-  }
-  .report-tab { white-space: nowrap; font-size: 11px; padding: 6px 10px; }
-
-  /* Liste araç çubuğu */
-  .list-toolbar { gap: 6px; }
-  .btn-primary, .btn-import { font-size: 12px; padding: 8px 10px; }
-
-  /* Okul karşılaştırma tablosu */
-  .school-compare { overflow-x: auto; }
-
-  /* Modal tam ekran */
+  .tabs { position: static !important; }
   .modal-box {
     width: 100% !important;
     max-width: 100% !important;
@@ -1230,24 +1102,9 @@ table {
     border-radius: 18px 18px 0 0 !important;
     position: fixed !important;
     bottom: 0 !important; left: 0 !important; right: 0 !important;
-    top: auto !important;
-    margin: 0 !important;
+    top: auto !important; margin: 0 !important;
   }
   .modal-overlay { align-items: flex-end !important; }
-
-  /* İçerik alt tab çubuğu için boşluk */
-  
-
-  /* Alt tab çubuğu */
   .tab { font-size: 10px; padding: 8px 4px; }
-
-  /* Header safe area */
-  .header { padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
-
-  /* Büyük dokunma hedefleri */
-  .btn-xs { padding: 8px 10px !important; font-size: 12px !important; }
-  .status-step { padding: 8px 6px !important; }
-
-  /* iOS zoom engeli */
   input, select, textarea { font-size: 16px !important; }
 }
