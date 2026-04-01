@@ -50,7 +50,7 @@ body {
   flex-direction: column;
   min-height: 100dvh;
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* ===== HEADER ===== */
@@ -121,8 +121,11 @@ body {
 
 /* ===== CONTENT ===== */
 .content {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  padding: 12px 14px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 14px 80px 14px;
+  -webkit-overflow-scrolling: touch;
 }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
