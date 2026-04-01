@@ -780,6 +780,13 @@ function setupEventListeners() {
     document.getElementById('addPublisherRow').style.display = 'flex';
     document.getElementById('btnAddPublisher').style.display = 'none';
   });
+  document.getElementById('btnTogglePublishers')?.addEventListener('click', () => {
+    const body = document.getElementById('publisherBody');
+    const btn = document.getElementById('btnTogglePublishers');
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    btn.textContent = isOpen ? '▼ Göster' : '▲ Gizle';
+  });
   document.getElementById('btnSavePublisher').addEventListener('click', savePublisher);
   document.getElementById('btnCancelPublisher').addEventListener('click', () => {
     document.getElementById('addPublisherRow').style.display = 'none';

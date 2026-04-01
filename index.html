@@ -207,16 +207,21 @@
       </div>
 
       <div class="settings-section">
-        <h3 class="section-title">📚 Yayıncılar</h3>
-        <div id="publisherList"></div>
-        <div class="add-publisher-row" id="addPublisherRow" style="display:none">
-          <input type="text" id="newPubName" placeholder="Yayıncı adı" class="input-sm">
-          <input type="tel" id="newPubPhone" placeholder="Telefon" class="input-sm">
-          <input type="email" id="newPubEmail" placeholder="E-posta" class="input-sm">
-          <button class="btn-sm btn-success" id="btnSavePublisher">Kaydet</button>
-          <button class="btn-sm btn-secondary" id="btnCancelPublisher">İptal</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <h3 class="section-title" style="margin-bottom:0">📚 Yayıncılar</h3>
+          <button class="btn-xs btn-secondary" id="btnTogglePublishers">▲ Gizle</button>
         </div>
-        <button class="btn-secondary" id="btnAddPublisher" style="margin-top:8px;font-size:11px">+ Yayıncı Ekle</button>
+        <div id="publisherBody">
+          <div id="publisherList"></div>
+          <div class="add-publisher-row" id="addPublisherRow" style="display:none">
+            <input type="text" id="newPubName" placeholder="Yayıncı adı" class="input-sm">
+            <input type="tel" id="newPubPhone" placeholder="Telefon" class="input-sm">
+            <input type="email" id="newPubEmail" placeholder="E-posta" class="input-sm">
+            <button class="btn-sm btn-success" id="btnSavePublisher">Kaydet</button>
+            <button class="btn-sm btn-secondary" id="btnCancelPublisher">İptal</button>
+          </div>
+          <button class="btn-secondary" id="btnAddPublisher" style="margin-top:8px;font-size:11px">+ Yayıncı Ekle</button>
+        </div>
       </div>
 
       <div class="settings-section">
