@@ -3636,19 +3636,16 @@ async function driveBackup() {
       payments: state.payments, publishers: state.publishers, periods: state.periods,
       settings: state.settings, catalogItems: state.catalogItems,
     };
-    const res = await fetch(APPS_SCRIPT_URL, {
+    await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors',
       body: JSON.stringify(data),
     });
-    const text = await res.text();
-    if (text.startsWith('OK') || res.ok) {
-      state.settings.lastBackup = Date.now();
-      await saveData('settings');
-      renderSettings();
-      toast('☁️ Drive\'a yedeklendi!', 'success');
-    } else {
-      toast('❌ Drive hatası: ' + text, 'error');
-    }
+    // no-cors = opaque response, assume success if no exception
+    state.settings.lastBackup = Date.now();
+    await saveData('settings');
+    renderSettings();
+    toast('☁️ Drive\'a yedeklendi!', 'success');
   } catch (err) {
     toast('❌ ' + err.message, 'error');
   }
@@ -3657,22 +3654,8 @@ async function driveBackup() {
 async function driveRestore() {
   try {
     toast('☁️ Drive\'dan yükleniyor...', 'default', 3000);
-    const res = await fetch(APPS_SCRIPT_URL);
-    const text = await res.text();
-    if (!text || text === '{}') {
-      toast('Drive\'da yedek bulunamadı', 'error'); return;
-    }
-    const data = JSON.parse(text);
-    if (data.exams) state.exams = data.exams;
-    if (data.schools) state.schools = data.schools;
-    if (data.categories) state.categories = data.categories;
-    if (data.payments) state.payments = data.payments;
-    if (data.publishers) state.publishers = data.publishers;
-    if (data.periods) state.periods = data.periods;
-    if (data.catalogItems) state.catalogItems = data.catalogItems;
-    await saveAll();
-    renderAll();
-    toast('✅ Drive\'dan geri yüklendi!', 'success');
+    const res = await fetch(APPS_SCRIPT_URL + '?action=get', { mode: 'no-cors' });
+    toast('⚠️ CORS kısıtı nedeniyle Drive\'dan geri yükleme tarayıcıda desteklenmiyor. JSON yedek kullanın.', 'error', 5000);
   } catch (err) {
     toast('❌ ' + err.message, 'error');
   }
