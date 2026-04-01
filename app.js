@@ -3625,7 +3625,7 @@ async function importBackup(e) {
   reader.readAsText(file);
 }
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7qlbQQh-uUr6WwY7Jz8YaCVheNsc2CDJEpLgJLtF6TtBB7QsrU-65LJIFvz8zg2Fm/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtU6hD7DfuxhTRBp946E1Uy__LqNdnPOk6HbzJulCKf3tnXky_-Gq0DtImS4YTYEy4/exec';
 
 async function driveBackup() {
   try {
