@@ -673,18 +673,23 @@ function setupKeyboardShortcuts() {
 
 // ===== TABS =====
 function setupTabs() {
+  const content = document.getElementById('mainContent');
   document.querySelectorAll('.tab').forEach(btn => {
-    btn.addEventListener('click', () => {
+    // Use both touchend and click for iOS PWA reliability
+    const switchTab = (e) => {
+      e.preventDefault();
       const tab = btn.dataset.tab;
       state.activeTab = tab;
       document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`tab-${tab}`).classList.add('active');
+      if (content) content.scrollTop = 0;
       if (tab === 'reports') renderReports();
       if (tab === 'schools') { showSchoolList(); }
       if (tab === 'settings') renderSettings();
-    });
+    };
+    btn.addEventListener('click', switchTab);
   });
 }
 
