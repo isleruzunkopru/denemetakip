@@ -592,8 +592,6 @@ async function undoLast() {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', async () => {
-  // Handle Google OAuth redirect callback
-  handleOAuthCallback();
   
   // Ensure app is visible immediately
   document.body.style.opacity = '1';
