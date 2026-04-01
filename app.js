@@ -58,7 +58,7 @@ const chromeStorage = (() => {
 })();
 
 // Override chrome.storage.local with our shim
-const chrome = {
+const _chromePWA = {
   storage: { local: chromeStorage, onChanged: { addListener() {} } },
   runtime: {
     getURL: (path) => path,
@@ -78,6 +78,17 @@ const chrome = {
     }
   }
 };
+
+// Set chrome shim globally
+if (typeof chrome === 'undefined' || !chrome.storage) {
+  window.chrome = _chromePWA;
+} else {
+  // Patch existing chrome object
+  chrome.storage.local = chromeStorage;
+  chrome.storage.onChanged = { addListener() {} };
+  const _base = window.location.pathname.replace(/\/[^/]*$/, '');
+  chrome.runtime.getURL = (path) => window.location.origin + _base + '/' + path.replace(/^\//, '');
+}
 
 // ============================================================
 // DENEME TAKİP v3.0 - popup.js
