@@ -1128,3 +1128,12 @@ input, select, textarea {
   padding: 6px 12px; font-weight: 800; font-size: 11px;
   cursor: pointer; margin-left: auto; white-space: nowrap;
 }
+
+/* ── Takvim mobile overflow fix ── */
+@media (max-width: 480px) {
+  .cal-toolbar { flex-wrap: wrap; gap: 6px; }
+  #calFilterSchool { max-width: 120px; font-size: 11px; }
+  .calendar-legend { flex-wrap: wrap; gap: 4px; font-size: 10px; }
+  .cal-day { min-height: 36px; }
+  #calendarGrid { font-size: 11px; }
+}
