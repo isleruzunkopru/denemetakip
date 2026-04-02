@@ -1084,15 +1084,16 @@ function renderExamList() {
 
   if (isTable) {
     list.innerHTML = '';
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:8px;border:1px solid #ddd6fe;';
     const table = document.createElement('table');
     table.className = 'exam-table';
     table.innerHTML = `<thead><tr>
-      <th><input type="checkbox" id="cbSelectAll"></th>
+      <th style="width:28px"><input type="checkbox" id="cbSelectAll"></th>
       <th>Deneme Adı</th>
-      <th>Kategori</th>
       <th>Okul</th>
-      <th>📦 Stok</th>
-      <th>🎯 Uygulama</th>
+      <th>Stok</th>
+      <th>Uygulama</th>
       <th>Durum</th>
       <th>İşlem</th>
     </tr></thead><tbody></tbody>`;
@@ -1118,17 +1119,19 @@ function renderExamList() {
       const tr = document.createElement('tr');
       if (isApplied) tr.classList.add('row-applied');
       if (isSelected) tr.classList.add('row-selected');
+      const activeStatus = STATUS_CONFIG[status];
+      const statusBadge = `<span style="background:${activeStatus.color}22;color:${activeStatus.color};font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600;white-space:nowrap">${activeStatus.label}</span>`;
       tr.innerHTML = `
         <td class="td-cb"><input type="checkbox" class="exam-select-cb" ${isSelected?'checked':''} data-id="${exam.id}"></td>
         <td class="td-name">
           <div class="et-name">${exam.name}</div>
+          <div style="display:flex;gap:2px;flex-wrap:wrap;margin-top:2px">${catBadges}${exam.type ? `<span class="badge badge-type-${exam.type.toLowerCase()}" style="font-size:9px;padding:1px 5px">${exam.type}</span>` : ''}</div>
           ${pubDisplay ? `<div class="et-pub">📚 ${pubDisplay}</div>` : ''}
         </td>
-        <td class="td-cat">${catBadges}${exam.type ? `<span class="badge badge-type-${exam.type.toLowerCase()}" style="font-size:9px;padding:1px 5px">${exam.type}</span>` : ''}</td>
         <td class="td-school">${exam.schoolName || '<span class="et-empty">—</span>'}</td>
         <td class="td-stock">${exam.stockDate ? formatDate(exam.stockDate) : '<span class="et-empty">—</span>'}</td>
         <td class="td-app">${exam.applicationDate ? formatDate(exam.applicationDate) : '<span class="et-empty">—</span>'}</td>
-        <td class="td-status"><div class="status-steps">${statusSteps}</div></td>
+        <td class="td-status">${statusBadge}<div style="margin-top:3px"><div class="status-steps">${statusSteps}</div></div></td>
         <td class="td-actions">
           <button class="btn-xs btn-edit" data-id="${exam.id}" title="Düzenle">✏️</button>
           <button class="btn-xs btn-copy" data-id="${exam.id}" title="Kopyala">📋</button>
@@ -1140,7 +1143,8 @@ function renderExamList() {
       tbody.appendChild(tr);
     });
 
-    list.appendChild(table);
+    wrapper.appendChild(table);
+    list.appendChild(wrapper);
 
     table.querySelector('#cbSelectAll')?.addEventListener('change', (e) => {
       table.querySelectorAll('.exam-select-cb').forEach(cb => {
