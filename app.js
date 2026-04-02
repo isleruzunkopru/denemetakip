@@ -429,15 +429,10 @@ async function saveData(key) {
 }
 
 async function saveAll() {
-    try { localStorage.setItem('exams', JSON.stringify(exams)); } catch(e) {}
-  try { localStorage.setItem('schools', JSON.stringify(schools)); } catch(e) {}
-  try { localStorage.setItem('categories', JSON.stringify(categories)); } catch(e) {}
-  try { localStorage.setItem('payments', JSON.stringify(payments)); } catch(e) {}
-  try { localStorage.setItem('publishers', JSON.stringify(publishers)); } catch(e) {}
-  try { localStorage.setItem('periods', JSON.stringify(periods)); } catch(e) {}
-  try { localStorage.setItem('history', JSON.stringify(history)); } catch(e) {}
-  try { localStorage.setItem('settings', JSON.stringify(settings)); } catch(e) {}
-  try { localStorage.setItem('catalogItems', JSON.stringify(catalogItems)); } catch(e) {}
+  const keys = ['exams','schools','categories','payments','publishers','periods','history','settings','catalogItems'];
+  keys.forEach(k => {
+    try { localStorage.setItem(k, JSON.stringify(state[k])); } catch(e) {}
+  });
 }
 
 function genId() {
