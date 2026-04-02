@@ -3903,12 +3903,9 @@ function renderCatalog() {
     const [type, monthStr] = catalogFilterMonth.split('-');
     const month = parseInt(monthStr);
     groups = groups.filter(g => {
-      const items = g.items || [];
-      return items.some(item => {
-        const dateStr = type === 'stock' ? item.stockDate : item.applicationDate;
-        if (!dateStr) return false;
-        return new Date(dateStr).getMonth() + 1 === month;
-      });
+      const dateStr = type === 'stock' ? g.stockDate : g.applicationDate;
+      if (!dateStr) return false;
+      return new Date(dateStr).getMonth() + 1 === month;
     });
   }
 
