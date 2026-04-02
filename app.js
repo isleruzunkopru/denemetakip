@@ -1034,41 +1034,29 @@ function renderExamList() {
   const list = document.getElementById('examList');
   let exams = [...state.exams];
 
-  // Period filter
   if (state.filterPeriod) exams = exams.filter(e => e.periodId === state.filterPeriod);
-
-  // Subtab filter
   if (state.filterSubtab === 'pending') exams = exams.filter(e => (e.status || 'ordered') !== 'applied');
   else if (state.filterSubtab === 'applied') exams = exams.filter(e => e.status === 'applied');
-
-  // Category/type/publisher filter
   if (state.filterCat) exams = exams.filter(e => (e.categoryIds || [e.categoryId]).includes(state.filterCat));
   if (state.filterType) exams = exams.filter(e => e.type === state.filterType);
   if (state.filterPub) exams = exams.filter(e => e.publisherId === state.filterPub);
-
-  // Search
   if (state.searchQuery) {
     const q = state.searchQuery.toLowerCase();
     exams = exams.filter(e =>
-      e.name?.toLowerCase().includes(q) ||
-      e.schoolName?.toLowerCase().includes(q) ||
-      e.categoryNames?.toLowerCase().includes(q) ||
-      e.type?.toLowerCase().includes(q) ||
+      e.name?.toLowerCase().includes(q) || e.schoolName?.toLowerCase().includes(q) ||
+      e.categoryNames?.toLowerCase().includes(q) || e.type?.toLowerCase().includes(q) ||
       (e.applicationDate && formatDate(e.applicationDate).includes(q)) ||
       (e.stockDate && formatDate(e.stockDate).includes(q)) ||
-      (e.status && STATUS_CONFIG[e.status]?.label.toLowerCase().includes(q)) ||
       (e.trackingNumber && e.trackingNumber.toLowerCase().includes(q))
     );
   }
-
-  // Sort
   exams.sort((a, b) => {
     const sort = state.filterSort || 'appDate';
-    if (sort === 'appDate')     return (a.applicationDate||'').localeCompare(b.applicationDate||'');
-    if (sort === 'appDateDesc') return (b.applicationDate||'').localeCompare(a.applicationDate||'');
-    if (sort === 'stockDate')   return (a.stockDate||'').localeCompare(b.stockDate||'');
+    if (sort === 'appDate')       return (a.applicationDate||'').localeCompare(b.applicationDate||'');
+    if (sort === 'appDateDesc')   return (b.applicationDate||'').localeCompare(a.applicationDate||'');
+    if (sort === 'stockDate')     return (a.stockDate||'').localeCompare(b.stockDate||'');
     if (sort === 'stockDateDesc') return (b.stockDate||'').localeCompare(a.stockDate||'');
-    if (sort === 'name')        return (a.name||'').localeCompare(b.name||'', 'tr');
+    if (sort === 'name')          return (a.name||'').localeCompare(b.name||'', 'tr');
     return 0;
   });
 
@@ -1092,83 +1080,127 @@ function renderExamList() {
     return;
   }
 
+  const isTable = list.classList.contains('table-mode');
+
+  if (isTable) {
+    list.innerHTML = '';
+    const table = document.createElement('table');
+    table.className = 'exam-table';
+    table.innerHTML = `<thead><tr>
+      <th><input type="checkbox" id="cbSelectAll"></th>
+      <th>Deneme Adı</th>
+      <th>Kategori</th>
+      <th>Okul</th>
+      <th>📦 Stok</th>
+      <th>🎯 Uygulama</th>
+      <th>Durum</th>
+      <th>İşlem</th>
+    </tr></thead><tbody></tbody>`;
+    const tbody = table.querySelector('tbody');
+
+    exams.forEach(exam => {
+      const status = exam.status || 'ordered';
+      const sc = STATUS_CONFIG[status] || STATUS_CONFIG.ordered;
+      const isApplied = status === 'applied';
+      const isSelected = state.selectedExams.has(exam.id);
+      const catBadges = (exam.categoryIds?.length > 0 ? exam.categoryIds : (exam.categoryId ? [exam.categoryId] : []))
+        .map(id => { const c = getCatById(id); return c ? `<span class="badge" style="background:${c.color}22;color:${c.color};font-size:9px;padding:1px 5px">${c.name}</span>` : ''; }).join('');
+      let pubDisplay = '';
+      const publisher = state.publishers.find(p => p.id === exam.publisherId);
+      if (publisher) pubDisplay = publisher.name.replace(/ KURUMSAL DENEME \d{4}-\d{2,4}$/,'').trim();
+      else if (exam.publisherName) pubDisplay = exam.publisherName.replace(/ KURUMSAL DENEME \d{4}-\d{2,4}$/,'').replace(/ YAYINLARI$/,'').trim();
+      const statusSteps = STATUS_ORDER.map(key => {
+        const s = STATUS_CONFIG[key];
+        const isDone = STATUS_ORDER.indexOf(key) < STATUS_ORDER.indexOf(status);
+        const isActive = key === status;
+        return `<button class="status-step ${isActive?'active':''} ${isDone?'done':''}" data-id="${exam.id}" data-status="${key}" style="--sc:${s.color}" title="${s.label}">${s.short}</button>`;
+      }).join('');
+      const tr = document.createElement('tr');
+      if (isApplied) tr.classList.add('row-applied');
+      if (isSelected) tr.classList.add('row-selected');
+      tr.innerHTML = `
+        <td class="td-cb"><input type="checkbox" class="exam-select-cb" ${isSelected?'checked':''} data-id="${exam.id}"></td>
+        <td class="td-name">
+          <div class="et-name">${exam.name}</div>
+          ${pubDisplay ? `<div class="et-pub">📚 ${pubDisplay}</div>` : ''}
+        </td>
+        <td class="td-cat">${catBadges}${exam.type ? `<span class="badge badge-type-${exam.type.toLowerCase()}" style="font-size:9px;padding:1px 5px">${exam.type}</span>` : ''}</td>
+        <td class="td-school">${exam.schoolName || '<span class="et-empty">—</span>'}</td>
+        <td class="td-stock">${exam.stockDate ? formatDate(exam.stockDate) : '<span class="et-empty">—</span>'}</td>
+        <td class="td-app">${exam.applicationDate ? formatDate(exam.applicationDate) : '<span class="et-empty">—</span>'}</td>
+        <td class="td-status"><div class="status-steps">${statusSteps}</div></td>
+        <td class="td-actions">
+          <button class="btn-xs btn-edit" data-id="${exam.id}" title="Düzenle">✏️</button>
+          <button class="btn-xs btn-copy" data-id="${exam.id}" title="Kopyala">📋</button>
+          <button class="btn-xs btn-note" data-id="${exam.id}" title="Not">📝</button>
+          <button class="btn-xs btn-result" data-id="${exam.id}" title="Sonuç" style="${exam.result?'background:#d1fae5;color:#065f46':''}">📊</button>
+          <button class="btn-xs btn-gcal" data-id="${exam.id}" title="Takvim" style="${exam.gcalAdded?'background:#dcfce7;color:#166534':''}">📅</button>
+          <button class="btn-xs btn-delete" data-id="${exam.id}" title="Sil">🗑️</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    list.appendChild(table);
+
+    table.querySelector('#cbSelectAll')?.addEventListener('change', (e) => {
+      table.querySelectorAll('.exam-select-cb').forEach(cb => {
+        cb.checked = e.target.checked;
+        const id = cb.dataset.id;
+        if (e.target.checked) { state.selectedExams.add(id); state.bulkMode = true; }
+        else state.selectedExams.delete(id);
+      });
+      if (!e.target.checked) state.bulkMode = false;
+      renderExamList();
+    });
+    table.querySelectorAll('.exam-select-cb').forEach(cb => {
+      cb.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = cb.dataset.id;
+        if (cb.checked) { state.selectedExams.add(id); state.bulkMode = true; }
+        else { state.selectedExams.delete(id); if (state.selectedExams.size === 0) state.bulkMode = false; }
+        renderExamList();
+      });
+    });
+    table.querySelectorAll('.status-step').forEach(btn => btn.addEventListener('click', () => setExamStatus(btn.dataset.id, btn.dataset.status)));
+    table.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => openExamModal(btn.dataset.id)));
+    table.querySelectorAll('.btn-copy').forEach(btn => btn.addEventListener('click', () => copyExam(btn.dataset.id)));
+    table.querySelectorAll('.btn-note').forEach(btn => btn.addEventListener('click', () => openNotesModal(btn.dataset.id)));
+    table.querySelectorAll('.btn-result').forEach(btn => btn.addEventListener('click', () => openExamResultModal(btn.dataset.id)));
+    table.querySelectorAll('.btn-gcal').forEach(btn => btn.addEventListener('click', () => addSingleToGCal(btn.dataset.id)));
+    table.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => deleteExam(btn.dataset.id)));
+    return;
+  }
+
+  // ===== CARD VIEW =====
   list.innerHTML = '';
-  // Table header
-  const header = document.createElement('div');
-  header.className = 'exam-list-header';
-  header.innerHTML = `
-    <div style="width:30px"></div>
-    <div style="min-width:180px">Deneme Adı</div>
-    <div style="min-width:180px">Okul / Tarihler / Fiyat</div>
-    <div style="min-width:180px">Durum</div>
-    <div>İşlemler</div>
-  `;
-  list.appendChild(header);
   exams.forEach(exam => {
-    const cat = getCatById(exam.categoryId);
     const catBadges = (exam.categoryIds?.length > 0 ? exam.categoryIds : (exam.categoryId ? [exam.categoryId] : []))
       .map(id => { const c = getCatById(id); return c ? `<span class="badge" style="background:${c.color}22;color:${c.color}">${c.name}</span>` : ''; }).join('');
-
     const status = exam.status || 'ordered';
     const sc = STATUS_CONFIG[status] || STATUS_CONFIG.ordered;
     const isApplied = status === 'applied';
     const isSelected = state.selectedExams.has(exam.id);
-
     const card = document.createElement('div');
     card.className = 'exam-card' + (isApplied ? ' exam-applied' : '') + (isSelected ? ' selected' : '');
     card.style.borderLeftColor = sc.color;
-
-    // Notes preview
-    const notesHtml = exam.notes?.length > 0
-      ? `<div class="exam-notes-preview">📝 ${exam.notes[exam.notes.length-1].text}</div>` : '';
-
-    // Tracking number
-    const trackingHtml = exam.trackingNumber
-      ? `<span class="exam-meta-item"><a class="tracking-link" href="https://www.ptt.gov.tr/tr/bireysel/gonderi-takip#${exam.trackingNumber}" target="_blank">📮 ${exam.trackingNumber}</a></span>` : '';
-
-    // Period badge
+    const notesHtml = exam.notes?.length > 0 ? `<div class="exam-notes-preview">📝 ${exam.notes[exam.notes.length-1].text}</div>` : '';
+    const trackingHtml = exam.trackingNumber ? `<span class="exam-meta-item"><a class="tracking-link" href="https://www.ptt.gov.tr/tr/bireysel/gonderi-takip#${exam.trackingNumber}" target="_blank">📮 ${exam.trackingNumber}</a></span>` : '';
     const period = state.periods.find(p => p.id === exam.periodId);
     const periodBadge = period ? `<span class="badge" style="background:#f0fdf4;color:#166534;font-size:9px">${period.name}</span>` : '';
-
-    // Publisher name
-    // Publisher: look up by ID first, fall back to stored name, then catalog item
     const publisher = state.publishers.find(p => p.id === exam.publisherId);
     let pubDisplay = '';
-    if (publisher) {
-      pubDisplay = publisher.short && publisher.short !== publisher.name ? publisher.short : publisher.name;
-    } else if (exam.publisherName) {
-      // Use stored name directly - strip "KURUMSAL DENEME 2025-26" suffix for brevity
-      pubDisplay = exam.publisherName
-        .replace(/ KURUMSAL DENEME \d{4}-\d{2,4}$/,'')
-        .replace(/ YAYINLARI$/,'')
-        .replace(/ YAYINLARI KURUMSAL.*$/,'')
-        .trim();
-    } else if (exam.catalogItemId) {
-      const ci = state.catalogItems.find(i => i.id === exam.catalogItemId);
-      if (ci?.publisherName) {
-        pubDisplay = ci.publisherName
-          .replace(/ KURUMSAL DENEME \d{4}-\d{2,4}$/,'')
-          .replace(/ YAYINLARI$/,'')
-          .trim();
-      }
-    }
-    const pubBadge = pubDisplay
-      ? `<span style="font-size:10px;color:var(--text-muted);font-weight:600">📚 ${pubDisplay}</span>` : '';
+    if (publisher) pubDisplay = publisher.short && publisher.short !== publisher.name ? publisher.short : publisher.name;
+    else if (exam.publisherName) pubDisplay = exam.publisherName.replace(/ KURUMSAL DENEME \d{4}-\d{2,4}$/,'').replace(/ YAYINLARI$/,'').replace(/ YAYINLARI KURUMSAL.*$/,'').trim();
+    else if (exam.catalogItemId) { const ci = state.catalogItems.find(i => i.id === exam.catalogItemId); if (ci?.publisherName) pubDisplay = ci.publisherName.replace(/ KURUMSAL DENEME \d{4}-\d{2,4}$/,'').replace(/ YAYINLARI$/,'').trim(); }
+    const pubBadge = pubDisplay ? `<span style="font-size:10px;color:var(--text-muted);font-weight:600">📚 ${pubDisplay}</span>` : '';
 
     card.innerHTML = `
       <div class="exam-card-header">
         <div class="exam-card-header-left">
           <input type="checkbox" class="exam-select-cb" ${isSelected ? 'checked' : ''} data-id="${exam.id}">
-          <div style="min-width:0">
-            <span class="exam-name">${exam.name}</span>
-            ${pubBadge}
-          </div>
+          <div style="min-width:0"><span class="exam-name">${exam.name}</span>${pubBadge}</div>
         </div>
-        <div class="exam-badges">
-          ${catBadges}
-          ${exam.type ? `<span class="badge badge-type-${exam.type.toLowerCase()}">${exam.type}</span>` : ''}
-          ${periodBadge}
-        </div>
+        <div class="exam-badges">${catBadges}${exam.type ? `<span class="badge badge-type-${exam.type.toLowerCase()}">${exam.type}</span>` : ''}${periodBadge}</div>
       </div>
       <div class="exam-card-meta">
         ${exam.schoolName ? `<span class="exam-meta-item">🏫 ${exam.schoolName}</span>` : ''}
@@ -1177,85 +1209,53 @@ function renderExamList() {
         ${exam.price ? `<span class="exam-meta-item">💰 ${exam.qty ? exam.qty + ' × ' + Number(exam.unitPrice).toLocaleString('tr-TR') + ' ₺ = ' : ''}${Number(exam.price).toLocaleString('tr-TR')} ₺</span>` : ''}
         ${trackingHtml}
       </div>
-      ${(exam.categoryBreakdown && Object.keys(exam.categoryBreakdown).length > 1) ? `
-      <div class="exam-cat-breakdown">
-        ${Object.entries(exam.categoryBreakdown).map(([id, qty]) => {
-          const c = getCatById(id);
-          return c ? `<span class="exam-cat-breakdown-chip" style="background:${c.color}18;color:${c.color};border:1px solid ${c.color}33">${c.name}: <b>${qty}</b></span>` : '';
-        }).join('')}
-        <span class="exam-cat-breakdown-chip" style="background:var(--primary-light);color:var(--primary);font-weight:800">Toplam: ${Object.values(exam.categoryBreakdown).reduce((s,v)=>s+v,0)}</span>
-      </div>` : ''}
+      ${(exam.categoryBreakdown && Object.keys(exam.categoryBreakdown).length > 1) ? `<div class="exam-cat-breakdown">${Object.entries(exam.categoryBreakdown).map(([id, qty]) => { const c = getCatById(id); return c ? `<span class="exam-cat-breakdown-chip" style="background:${c.color}18;color:${c.color};border:1px solid ${c.color}33">${c.name}: <b>${qty}</b></span>` : ''; }).join('')}<span class="exam-cat-breakdown-chip" style="background:var(--primary-light);color:var(--primary);font-weight:800">Toplam: ${Object.values(exam.categoryBreakdown).reduce((s,v)=>s+v,0)}</span></div>` : ''}
       ${notesHtml}
-      <div class="exam-status-row">
-        <div class="status-steps">
-          ${STATUS_ORDER.map(key => {
-            const s = STATUS_CONFIG[key];
-            const isDone = STATUS_ORDER.indexOf(key) < STATUS_ORDER.indexOf(status);
-            const isActive = key === status;
-            return `<button class="status-step ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}"
-              data-id="${exam.id}" data-status="${key}"
-              style="--sc:${s.color}" title="${s.label}">
-              ${s.short}
-            </button>`;
-          }).join('')}
-        </div>
-      </div>
+      <div class="exam-status-row"><div class="status-steps">${STATUS_ORDER.map(key => { const s = STATUS_CONFIG[key]; const isDone = STATUS_ORDER.indexOf(key) < STATUS_ORDER.indexOf(status); const isActive = key === status; return `<button class="status-step ${isActive?'active':''} ${isDone?'done':''}" data-id="${exam.id}" data-status="${key}" style="--sc:${s.color}" title="${s.label}">${s.short}</button>`; }).join('')}</div></div>
       <div class="exam-card-actions">
         <button class="btn-xs btn-edit" data-id="${exam.id}">✏️</button>
         <button class="btn-xs btn-copy" data-id="${exam.id}" title="Kopyala">📋</button>
         <button class="btn-xs btn-note" data-id="${exam.id}" title="Not Ekle">📝</button>
-        <button class="btn-xs btn-result" data-id="${exam.id}" title="Sonuç Gir" style="${exam.result ? 'background:#d1fae5;color:#065f46' : ''}">
-          ${exam.result ? '📊 Sonuç' : '📊'}
-        </button>
-        <button class="btn-xs btn-gcal" data-id="${exam.id}" style="${exam.gcalAdded ? 'background:#dcfce7;color:#166534' : ''}">
-          ${exam.gcalAdded ? '✅ Takvim' : '📅 Takvim'}
-        </button>
+        <button class="btn-xs btn-result" data-id="${exam.id}" style="${exam.result?'background:#d1fae5;color:#065f46':''}">${exam.result ? '📊 Sonuç' : '📊'}</button>
+        <button class="btn-xs btn-gcal" data-id="${exam.id}" style="${exam.gcalAdded?'background:#dcfce7;color:#166534':''}">${exam.gcalAdded ? '✅ Takvim' : '📅 Takvim'}</button>
         <button class="btn-xs btn-delete" data-id="${exam.id}">🗑️</button>
       </div>`;
-
     list.appendChild(card);
   });
 
-  // Attach listeners
   list.querySelectorAll('.exam-select-cb').forEach(cb => {
     cb.addEventListener('click', (e) => {
       e.stopPropagation();
       const id = cb.dataset.id;
-      if (cb.checked) {
-        state.selectedExams.add(id);
-        state.bulkMode = true;
-      } else {
-        state.selectedExams.delete(id);
-        if (state.selectedExams.size === 0) state.bulkMode = false;
-      }
+      if (cb.checked) { state.selectedExams.add(id); state.bulkMode = true; }
+      else { state.selectedExams.delete(id); if (state.selectedExams.size === 0) state.bulkMode = false; }
       renderExamList();
     });
   });
-  list.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', () => openExamModal(b.dataset.id)));
-  list.querySelectorAll('.btn-copy').forEach(b => b.addEventListener('click', () => copyExam(b.dataset.id)));
-  list.querySelectorAll('.btn-note').forEach(b => b.addEventListener('click', () => openNotesModal(b.dataset.id)));
-  list.querySelectorAll('.btn-result').forEach(b => b.addEventListener('click', () => openExamResultModal(b.dataset.id)));
-  list.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => deleteExam(b.dataset.id)));
-  list.querySelectorAll('.btn-gcal').forEach(b => b.addEventListener('click', () => addSingleToGCal(b.dataset.id)));
-  list.querySelectorAll('.status-step').forEach(b => b.addEventListener('click', () => setExamStatus(b.dataset.id, b.dataset.status)));
+  list.querySelectorAll('.status-step').forEach(btn => btn.addEventListener('click', () => setExamStatus(btn.dataset.id, btn.dataset.status)));
+  list.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => openExamModal(btn.dataset.id)));
+  list.querySelectorAll('.btn-copy').forEach(btn => btn.addEventListener('click', () => copyExam(btn.dataset.id)));
+  list.querySelectorAll('.btn-note').forEach(btn => btn.addEventListener('click', () => openNotesModal(btn.dataset.id)));
+  list.querySelectorAll('.btn-result').forEach(btn => btn.addEventListener('click', () => openExamResultModal(btn.dataset.id)));
+  list.querySelectorAll('.btn-gcal').forEach(btn => btn.addEventListener('click', () => addSingleToGCal(btn.dataset.id)));
+  list.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => deleteExam(btn.dataset.id)));
 
-  // Bulk status buttons
   const bulkBtns = document.getElementById('bulkStatusBtns');
   if (bulkBtns) {
     bulkBtns.innerHTML = '';
     STATUS_ORDER.forEach(key => {
+      if (key === 'applied') return;
       const s = STATUS_CONFIG[key];
       const btn = document.createElement('button');
       btn.className = 'btn-xs';
-      btn.style.background = s.color + '22';
-      btn.style.color = s.color;
-      btn.style.border = `1px solid ${s.color}`;
-      btn.textContent = s.short;
+      btn.style.background = s.color; btn.style.color = 'white';
+      btn.textContent = s.label;
       btn.addEventListener('click', () => bulkSetStatus(key));
       bulkBtns.appendChild(btn);
     });
   }
 }
+
 
 function cancelBulkMode() {
   state.selectedExams.clear();
@@ -3718,6 +3718,27 @@ let catalogFilterMonth = '';
 let catalogPubFilter = ''; // publisher name filter when drilling into a publisher
 
 function setupCatalogListeners() {
+  // Layout toggle: card / table
+  document.getElementById('btnLayoutCard')?.addEventListener('click', () => {
+    document.getElementById('examList').classList.remove('table-mode');
+    document.getElementById('btnLayoutCard').classList.add('active');
+    document.getElementById('btnLayoutTable').classList.remove('active');
+    localStorage.setItem('examLayout', 'card');
+    renderExamList();
+  });
+  document.getElementById('btnLayoutTable')?.addEventListener('click', () => {
+    document.getElementById('examList').classList.add('table-mode');
+    document.getElementById('btnLayoutTable').classList.add('active');
+    document.getElementById('btnLayoutCard').classList.remove('active');
+    localStorage.setItem('examLayout', 'table');
+    renderExamList();
+  });
+  // Restore saved layout
+  if (localStorage.getItem('examLayout') === 'table') {
+    document.getElementById('examList')?.classList.add('table-mode');
+    document.getElementById('btnLayoutTable')?.classList.add('active');
+    document.getElementById('btnLayoutCard')?.classList.remove('active');
+  }
   document.getElementById('btnViewList').addEventListener('click', () => switchView('list'));
   document.getElementById('btnViewCatalog').addEventListener('click', () => switchView('catalog'));
 
