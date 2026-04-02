@@ -781,6 +781,7 @@ function setupEventListeners() {
     const isOpen = body.style.display !== 'none';
     body.style.display = isOpen ? 'none' : 'block';
     btn.textContent = isOpen ? '▼ Göster' : '▲ Gizle';
+    localStorage.setItem('publisherBodyOpen', (!isOpen).toString());
   });
   document.getElementById('btnSavePublisher').addEventListener('click', savePublisher);
   document.getElementById('btnCancelPublisher').addEventListener('click', () => {
@@ -1092,6 +1093,17 @@ function renderExamList() {
   }
 
   list.innerHTML = '';
+  // Table header
+  const header = document.createElement('div');
+  header.className = 'exam-list-header';
+  header.innerHTML = `
+    <div style="width:30px"></div>
+    <div style="min-width:180px">Deneme Adı</div>
+    <div style="min-width:180px">Okul / Tarihler / Fiyat</div>
+    <div style="min-width:180px">Durum</div>
+    <div>İşlemler</div>
+  `;
+  list.appendChild(header);
   exams.forEach(exam => {
     const cat = getCatById(exam.categoryId);
     const catBadges = (exam.categoryIds?.length > 0 ? exam.categoryIds : (exam.categoryId ? [exam.categoryId] : []))
@@ -2005,19 +2017,31 @@ function renderSettings() {
         title.style.display = 'flex';
         title.style.alignItems = 'center';
         title.style.justifyContent = 'space-between';
+        // Check saved state - default hidden
+        const savedOpen = localStorage.getItem('publisherBodyOpen') === 'true';
+        // Get or create publisher body wrapper
+        let pubBody = document.getElementById('publisherBody');
+        if (!pubBody) {
+          pubBody = document.createElement('div');
+          pubBody.id = 'publisherBody';
+          pubList.parentNode.insertBefore(pubBody, pubList);
+          pubBody.appendChild(pubList);
+          const addRow = document.getElementById('addPublisherRow');
+          const addBtn = document.getElementById('btnAddPublisher');
+          if (addRow) pubBody.appendChild(addRow);
+          if (addBtn) pubBody.appendChild(addBtn);
+        }
+        pubBody.style.display = savedOpen ? 'block' : 'none';
         const btn = document.createElement('button');
         btn.id = 'btnTogglePublishers';
         btn.className = 'btn-xs btn-secondary';
-        btn.textContent = '▲ Gizle';
+        btn.textContent = savedOpen ? '▲ Gizle' : '▼ Göster';
         btn.style.fontSize = '11px';
         btn.addEventListener('click', () => {
-          const isOpen = pubList.style.display !== 'none';
-          pubList.style.display = isOpen ? 'none' : '';
-          const addRow = document.getElementById('addPublisherRow');
-          const addBtn = document.getElementById('btnAddPublisher');
-          if (addRow) addRow.style.display = isOpen ? 'none' : (addRow._wasVisible ? 'flex' : 'none');
-          if (addBtn) addBtn.style.display = isOpen ? 'none' : '';
+          const isOpen = pubBody.style.display !== 'none';
+          pubBody.style.display = isOpen ? 'none' : 'block';
           btn.textContent = isOpen ? '▼ Göster' : '▲ Gizle';
+          localStorage.setItem('publisherBodyOpen', (!isOpen).toString());
         });
         title.appendChild(btn);
       }
@@ -3324,48 +3348,9 @@ function openMultiExamModal() {
 
 
 // ===== GOOGLE CALENDAR =====
-const GOOGLE_CLIENT_ID = '141402909264-btv7soki4jd47dlto7bm10pmne6u8rhv.apps.googleusercontent.com';
-const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-let _googleToken = null;
-let _googleTokenExpiry = 0;
-
-function getGoogleToken() {
-  return new Promise((resolve, reject) => {
-    // Return cached token if still valid
-    if (_googleToken && Date.now() < _googleTokenExpiry) {
-      resolve(_googleToken);
-      return;
-    }
-    if (!window.google?.accounts?.oauth2) {
-      reject(new Error('Google Identity Services yüklenmedi'));
-      return;
-    }
-    const savedEmail = localStorage.getItem('gDriveEmail') || '';
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: GOOGLE_SCOPE,
-      hint: savedEmail,
-      callback: (response) => {
-        if (response.error) {
-          reject(new Error(response.error));
-        } else {
-          _googleToken = response.access_token;
-          _googleTokenExpiry = Date.now() + (response.expires_in - 60) * 1000;
-          // Save email for future silent logins
-          if (response.access_token) {
-            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: { Authorization: `Bearer ${response.access_token}` }
-            }).then(r => r.json()).then(info => {
-              if (info.email) localStorage.setItem('gDriveEmail', info.email);
-            }).catch(() => {});
-          }
-          resolve(_googleToken);
-        }
-      },
-    });
-    // Silent if we have a saved email, otherwise show picker
-    client.requestAccessToken({ prompt: savedEmail ? '' : 'select_account' });
-  });
+// Google OAuth disabled - using Apps Script instead
+async function getGoogleToken() {
+  return Promise.reject(new Error('Google Calendar entegrasyonu bu sürümde devre dışı'));
 }
 
 async function addToGoogleCalendar(exam) {
@@ -3729,6 +3714,7 @@ let catalogView = 'list'; // 'list' | 'catalog'
 let catalogSubView = 'exams'; // 'exams' | 'publishers'
 let catalogSearch = '';
 let catalogFilterCat = '';
+let catalogFilterMonth = '';
 let catalogPubFilter = ''; // publisher name filter when drilling into a publisher
 
 function setupCatalogListeners() {
@@ -3761,6 +3747,12 @@ function setupCatalogListeners() {
     catalogFilterCat = e.target.value;
     if (catalogSubView === 'exams') renderCatalog();
     else renderPublisherGrid();
+  });
+
+  const monthSel = document.getElementById('catalogFilterMonth');
+  if (monthSel) monthSel.addEventListener('change', e => {
+    catalogFilterMonth = e.target.value;
+    if (catalogSubView === 'exams') renderCatalog();
   });
 
   const importInput = document.getElementById('btnImportExcel');
@@ -3904,6 +3896,20 @@ function renderCatalog() {
   // Category filter
   if (catalogFilterCat) {
     groups = groups.filter(g => g.categoryIds.includes(catalogFilterCat));
+  }
+
+  // Month filter
+  if (catalogFilterMonth) {
+    const [type, monthStr] = catalogFilterMonth.split('-');
+    const month = parseInt(monthStr);
+    groups = groups.filter(g => {
+      const items = g.items || [];
+      return items.some(item => {
+        const dateStr = type === 'stock' ? item.stockDate : item.applicationDate;
+        if (!dateStr) return false;
+        return new Date(dateStr).getMonth() + 1 === month;
+      });
+    });
   }
 
   // Sort: publisher then name

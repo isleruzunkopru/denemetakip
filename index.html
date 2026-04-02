@@ -146,6 +146,33 @@
           <select id="catalogFilterCat" class="filter-select">
             <option value="">Tüm Kategoriler</option>
           </select>
+          <select id="catalogFilterMonth" class="filter-select">
+            <option value="">Tüm Aylar</option>
+            <option value="stock-1">Stok: Ocak</option>
+            <option value="stock-2">Stok: Şubat</option>
+            <option value="stock-3">Stok: Mart</option>
+            <option value="stock-4">Stok: Nisan</option>
+            <option value="stock-5">Stok: Mayıs</option>
+            <option value="stock-6">Stok: Haziran</option>
+            <option value="stock-7">Stok: Temmuz</option>
+            <option value="stock-8">Stok: Ağustos</option>
+            <option value="stock-9">Stok: Eylül</option>
+            <option value="stock-10">Stok: Ekim</option>
+            <option value="stock-11">Stok: Kasım</option>
+            <option value="stock-12">Stok: Aralık</option>
+            <option value="app-1">Uygulama: Ocak</option>
+            <option value="app-2">Uygulama: Şubat</option>
+            <option value="app-3">Uygulama: Mart</option>
+            <option value="app-4">Uygulama: Nisan</option>
+            <option value="app-5">Uygulama: Mayıs</option>
+            <option value="app-6">Uygulama: Haziran</option>
+            <option value="app-7">Uygulama: Temmuz</option>
+            <option value="app-8">Uygulama: Ağustos</option>
+            <option value="app-9">Uygulama: Eylül</option>
+            <option value="app-10">Uygulama: Ekim</option>
+            <option value="app-11">Uygulama: Kasım</option>
+            <option value="app-12">Uygulama: Aralık</option>
+          </select>
         </div>
         <div id="catalogList" class="catalog-list"></div>
         <div id="publisherGrid" class="publisher-grid hidden"></div>
@@ -209,9 +236,9 @@
       <div class="settings-section">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <h3 class="section-title" style="margin-bottom:0">📚 Yayıncılar</h3>
-          <button class="btn-xs btn-secondary" id="btnTogglePublishers">▲ Gizle</button>
+          <button class="btn-xs btn-secondary" id="btnTogglePublishers">▼ Göster</button>
         </div>
-        <div id="publisherBody">
+        <div id="publisherBody" style="display:none">
           <div id="publisherList"></div>
           <div class="add-publisher-row" id="addPublisherRow" style="display:none">
             <input type="text" id="newPubName" placeholder="Yayıncı adı" class="input-sm">

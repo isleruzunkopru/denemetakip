@@ -1117,3 +1117,75 @@ html, body {
 #app {
   background: var(--bg, #f8f7ff);
 }
+
+/* ===== EXAM LIST TABLE STYLE ===== */
+.exam-list {
+  display: table !important;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.exam-card {
+  display: table-row !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-left: none !important;
+  background: var(--surface);
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.exam-card:hover { background: var(--primary-light) !important; }
+.exam-card.exam-applied { background: #f0fdf4 !important; }
+.exam-card.selected { background: #ede9ff !important; }
+
+.exam-card-header,
+.exam-card-meta,
+.exam-status-row,
+.exam-card-actions,
+.exam-cat-breakdown,
+.exam-notes-preview {
+  display: table-cell !important;
+  padding: 6px 8px !important;
+  vertical-align: middle !important;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.exam-card-header { min-width: 180px; max-width: 220px; white-space: normal; }
+.exam-card-meta { min-width: 180px; white-space: normal; font-size: 11px; }
+.exam-status-row { min-width: 180px; }
+.exam-card-actions { min-width: 160px; }
+.exam-cat-breakdown { display: none !important; }
+.exam-notes-preview { display: none !important; }
+
+.exam-card-header-left { display: flex; align-items: center; gap: 4px; }
+.exam-badges { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 2px; }
+.status-steps { display: flex; gap: 2px; }
+.status-step { padding: 3px 5px !important; font-size: 10px !important; }
+
+.exam-name { font-weight: 700; font-size: 12px; display: block; }
+
+/* Table header row */
+.exam-list-header {
+  display: table-row;
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+  font-size: 11px;
+}
+.exam-list-header > div {
+  display: table-cell;
+  padding: 6px 8px;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .exam-list { display: block !important; }
+  .exam-card { display: block !important; border-bottom: 2px solid var(--border) !important; border-left: 3px solid !important; padding: 8px !important; border-radius: var(--radius-sm) !important; margin-bottom: 6px !important; }
+  .exam-card-header, .exam-card-meta, .exam-status-row, .exam-card-actions { display: block !important; border-right: none; padding: 3px 0 !important; white-space: normal !important; }
+  .exam-cat-breakdown { display: block !important; }
+  .exam-notes-preview { display: block !important; }
+}
