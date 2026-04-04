@@ -754,6 +754,24 @@ function setupEventListeners() {
   // Bulk actions
   document.getElementById('btnBulkDelete').addEventListener('click', bulkDelete);
   document.getElementById('btnBulkCancel').addEventListener('click', cancelBulkMode);
+  document.getElementById('btnBulkGcal')?.addEventListener('click', async () => {
+    const ids = [...state.selectedExams];
+    if (!ids.length) { toast('Deneme seçilmedi', 'error'); return; }
+    toast(`📅 ${ids.length} deneme takvime ekleniyor...`, 'default', 3000);
+    let ok = 0;
+    for (const id of ids) {
+      const exam = state.exams.find(e => e.id === id);
+      if (exam) {
+        exam.gcalAdded = false; // reset so it adds fresh
+        const result = await addToGoogleCalendar(exam);
+        if (result) ok++;
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+    cancelBulkMode();
+    renderExamList();
+    toast(`✅ ${ok} deneme takvime eklendi`, 'success');
+  });
 
   // School compare
   document.getElementById('btnCompareSchools').addEventListener('click', showSchoolCompare);
@@ -3381,14 +3399,17 @@ async function addToGoogleCalendar(exam) {
       return d.id;
     }
 
-    const desc = `${exam.name} | ${exam.schoolName || ''} | ${exam.categoryNames || ''} | ${exam.type || ''}`;
+    const publisher = state.publishers.find(p => p.id === exam.publisherId);
+    const pubName = publisher?.name || exam.publisherName || '';
+    const pubShort = pubName.replace(/ KURUMSAL DENEME \d{4}-\d{2,4}$/, '').replace(/ YAYINLARI$/, '').trim();
+    const desc = `${exam.name}${pubShort ? ' | ' + pubShort : ''} | ${exam.schoolName || ''} | ${exam.categoryNames || ''} | ${exam.type || ''}`;
 
     if (exam.stockDate) {
-      const id = await createEvent(`📦 Stok: ${exam.name}`, exam.stockDate, desc);
+      const id = await createEvent(`📦 Stok: ${exam.name}${pubShort ? ' - ' + pubShort : ''}`, exam.stockDate, desc);
       if (id) eventIds.push(id);
     }
     if (exam.applicationDate) {
-      const id = await createEvent(`🎯 Uygulama: ${exam.name}`, exam.applicationDate, desc);
+      const id = await createEvent(`🎯 Uygulama: ${exam.name}${pubShort ? ' - ' + pubShort : ''}`, exam.applicationDate, desc);
       if (id) eventIds.push(id);
     }
 
