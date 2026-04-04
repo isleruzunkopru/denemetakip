@@ -1,5 +1,5 @@
 // Service Worker — offline support
-const CACHE = 'deneme-takip-v44';
+const CACHE = 'deneme-takip-v45';
 const BASE = self.location.pathname.replace(/\/sw\.js$/, '');
 const ASSETS = [
   BASE + '/',

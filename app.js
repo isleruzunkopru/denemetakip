@@ -762,13 +762,27 @@ function setupEventListeners() {
     for (const id of ids) {
       const exam = state.exams.find(e => e.id === id);
       if (exam) {
-        exam.gcalAdded = false; // reset so it adds fresh
+        exam.gcalAdded = false;
         const result = await addToGoogleCalendar(exam);
         if (result) ok++;
         await new Promise(r => setTimeout(r, 400));
       }
     }
     cancelBulkMode();
+    renderExamList();
+    toast(`✅ ${ok} deneme takvime eklendi`, 'success');
+  });
+  document.getElementById('btnAllGcal')?.addEventListener('click', async () => {
+    const exams = [...state.exams].filter(e => (e.status || 'ordered') !== 'applied');
+    if (!exams.length) { toast('Eklenecek deneme yok', 'error'); return; }
+    toast(`📅 ${exams.length} deneme takvime ekleniyor...`, 'default', 4000);
+    let ok = 0;
+    for (const exam of exams) {
+      exam.gcalAdded = false;
+      const result = await addToGoogleCalendar(exam);
+      if (result) ok++;
+      await new Promise(r => setTimeout(r, 400));
+    }
     renderExamList();
     toast(`✅ ${ok} deneme takvime eklendi`, 'success');
   });
